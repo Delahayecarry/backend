@@ -1,6 +1,12 @@
 import requests
+import os
+from dotenv import load_dotenv
 
-def fetch_real_time_info(query):
+# 加载环境变量,但是.env 文件在项目根目录下，所以需要指定路径
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
+
+
+def fetch_real_time_info(query: str) -> str:
     '''
     搜索工具，用于搜索互联网上的信息
     Args:
@@ -21,7 +27,7 @@ def fetch_real_time_info(query):
     }
 
     headers = {
-        "Authorization": "Bearer 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",
+        "Authorization": f"Bearer {os.getenv('TAVILY_API_KEY')}",
         "Content-Type": "application/json"
     }
 

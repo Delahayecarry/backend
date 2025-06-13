@@ -3,31 +3,32 @@ import asyncio
 from autogen_agentchat.messages import TextMessage
 from autogen_agentchat.base import Response
 from autogen_core import CancellationToken
-from autogen_agentchat.agents import BaseChatAgent
+from autogen_agentchat.agents import BaseChatAgent, AssistantAgent
 from autogen_agentchat.messages import BaseChatMessage
-from typing import Sequence
+from typing import Sequence, List
 from agents.tools.useTavilySearch import fetch_real_time_info
 from agents.tools.useCalculator import calculate
-from agents.clients.Openai import OpenaiClient
 from agents.pormpt.parentPrompt import parent_prompt
 from autogen_core.model_context import UnboundedChatCompletionContext
 from autogen_core.models import UserMessage, AssistantMessage, FunctionExecutionResultMessage
-
-
+from autogen_core.models import ChatCompletionClient
 action_re = re.compile(r'^Action: (\w+): (.*)$', re.MULTILINE)
 
-class BaseAgent(BaseChatAgent):
-    def __init__(self, name: str, description: str):
-        super().__init__(name, description)
-        self.llmClient = OpenaiClient()
+class BaseAgent(AssistantAgent):
+    def __init__(self, name: str, model_client: ChatCompletionClient, handoffs: List[str]):
+        super().__init__(name, model_client, handoffs=handoffs)
         self.available_tools = { 
             "fetch_real_time_info": fetch_real_time_info,
             "calculate": calculate
         }
         self.system_prompt = parent_prompt
+        self.model_client = model_client
         self.max_turns = 50
         # 存储上下文
         self._model_context = UnboundedChatCompletionContext()
+        # 情感模型
+        self.handoffs = handoffs
+        #
 
     @property
     def produced_message_types(self) -> Sequence[type[BaseChatMessage]]:
@@ -57,7 +58,7 @@ class BaseAgent(BaseChatAgent):
             turns += 1 # 轮次加1
             conversation_context = await self._model_context.get_messages() # 获取上下文
             # 调用 LLM
-            llm_response = await self.llmClient.acall(
+            llm_response = await self.model_client.acall(
                 messages=conversation_context,
                 system_instruction=self.system_prompt
             )

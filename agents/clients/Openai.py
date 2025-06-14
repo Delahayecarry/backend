@@ -1,30 +1,36 @@
 # agents/clients/Openai.py
 
-from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import asyncio
 from typing import List, Optional
-
+from autogen_agentchat.messages import BaseChatMessage
+from autogen_ext.models.openai import OpenAIChatCompletionClient
+from autogen_core.models import UserMessage, AssistantMessage, SystemMessage
 # 导入 Autogen 结构化消息类型
-from autogen_core.models import  UserMessage, AssistantMessage, SystemMessage
-from autogen_agentchat.messages import BaseMessage
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 base_url = os.getenv("OPENAI_BASE_URL")
 model = os.getenv("OPENAI_MODEL") # 确保这个变量在全局可用，或者作为类属性传递
 
-class OpenaiClient:
+class OpenaiClient(OpenAIChatCompletionClient):
     def __init__(self,
                  api_key: str = api_key,
                  base_url: str = base_url,
-                 model: str = model # 将模型作为初始化参数或直接在 acall 中使用
-                 ):
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
-        self._default_model = model # 存储默认模型
+                 model: str = model, # 将模型作为初始化参数或直接在 acall 中使用 
+                 **kwargs):
+        super().__init__(
+            api_key=api_key, 
+            base_url=base_url, 
+            model=model,
+            **kwargs
+            )
+        self.model = model
+        # OpenAIChatCompletionClient 内部会处理 OpenAI 客户端的初始化
+        # 不需要直接访问 self.client。OpenAIChatCompletionClient 本身就是客户端接口。
 
     # 修改 acall 函数签名，接收 messages 列表和可选的 system_instruction
-    async def acall(self, messages: List[BaseMessage], system_instruction: Optional[str] = None) -> str:
+    async def acall(self, messages: List[BaseChatMessage], system_instruction: Optional[str] = None) -> str:
         """
         异步调用 OpenAI API，接收 Autogen 结构化消息列表作为对话历史。
         """
@@ -55,14 +61,16 @@ class OpenaiClient:
             return "[LLM Error: No messages to send to OpenAI API]"
 
         try:
+            # 这里的关键是：
+            # 1. OpenAIChatCompletionClient 应该提供一个同步的 'create' 方法。
+            # 2. 我们使用 asyncio.to_thread 将其转换为异步调用。
             response = await asyncio.to_thread(
-                self.client.chat.completions.create,
-                model=self._default_model, # 使用初始化时传入的模型
-                messages=openai_messages, # 传递转换后的消息列表
-                max_tokens=10000,
-                temperature=0.7
+                self.create, # 调用父类的同步 create 方法
+                messages=openai_messages,
             )
-            return response.choices[0].message.content.strip()
+            # Autogen 客户端的 create 方法返回的对象通常与 OpenAI API 的原始响应结构相似
+
+            return response.message.content.strip()
         except Exception as e:
             # 捕获并返回 LLM 错误
             return f"[LLM Error: {str(e)}]"

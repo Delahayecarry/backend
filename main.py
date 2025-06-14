@@ -1,8 +1,15 @@
 import asyncio
-from agents.baseAgent import BaseAgent
+from agents.baseAssistant import BaseAssistant
 from autogen_agentchat.messages import TextMessage
 from autogen_core import CancellationToken
-
+from agents.clients.OpenaiForAss import OpenaiForAssistant
+from dotenv import load_dotenv
+import os
+from agents.pormpt.basePrompt import system_prompt
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+base_url = os.getenv("OPENAI_BASE_URL")
+model = os.getenv("OPENAI_MODEL")
 
 user_message = """
 你的任务：
@@ -29,7 +36,7 @@ user_message = """
 
 
 async def main():
-    agent = BaseAgent(name="base_agent", description="A base agent")
+    agent = BaseAssistant(name="base_agent", model_client=OpenaiForAssistant(api_key=api_key, base_url=base_url, model=model), handoffs=["user"], system_prompt=system_prompt)
 
     response = await agent.on_messages(
         messages=[TextMessage(content=user_message, source="user")],

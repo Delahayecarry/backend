@@ -1,7 +1,7 @@
 from autogen_agentchat.ui import Console
 from autogen_agentchat.base import Team
 from autogen_agentchat.agents import AssistantAgent
-from agents.clients.OpenaiForAss import OpenaiForAssistant
+from backend.agents.clients.OpenaiForAssistant import OpenaiForAssistant
 import asyncio
 import os
 from dotenv import load_dotenv

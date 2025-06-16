@@ -2,7 +2,7 @@ from autogen_agentchat.agents import AssistantAgent
 
 from dotenv import load_dotenv
 import os
-from agents.clients.OpenaiForAssistant import OpenaiForAssistant
+from backend.agents.clients.OpenaiForAssistant import OpenaiForAssistant
 from math import exp
 import py_trees  
 
@@ -65,20 +65,23 @@ class EmotionalBehaviorAgent(AssistantAgent):
                     return py_trees.common.Status.SUCCESS if fn() else py_trees.common.Status.FAILURE
             return _Cond(fn.__name__)
         
-        root = py_trees.composites.Selector("Root")
+        root = py_trees.composites.Selector("Root", memory=True)
         root.add_children([
             py_trees.composites.Sequence("AvoidRiskyTask", children=[
                 condition(lambda: self.valence < 0 and self.arousal > 0.6),
                 ActionNode("avoid_risky_tasks")
-            ]),
+            ],
+            memory=True),
             py_trees.composites.Sequence("HighEnergyTask", children=[
                 condition(lambda: self.valence > 0.5 and self.arousal > 0.5),
                 ActionNode("perform_task_with_high_energy")
-            ]),
+            ],
+            memory=True),
             py_trees.composites.Sequence("Confront", children=[
                 condition(lambda: self.dominance > 0.7),
                 ActionNode("confront_opponent")
-            ]),
+            ],
+            memory=True),
             ActionNode("idle")  # fallback
         ])
         return root

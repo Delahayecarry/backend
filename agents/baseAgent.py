@@ -8,7 +8,7 @@ from autogen_agentchat.messages import BaseChatMessage
 from typing import Sequence, List
 from agents.tools.useTavilySearch import fetch_real_time_info
 from agents.tools.useCalculator import calculate
-from agents.pormpt.parentPrompt import parent_prompt
+from agents.prompt.parentPrompt import parent_prompt
 from autogen_core.model_context import UnboundedChatCompletionContext
 from autogen_core.models import UserMessage, AssistantMessage, FunctionExecutionResultMessage
 from autogen_core.models import ChatCompletionClient

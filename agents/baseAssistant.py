@@ -11,7 +11,7 @@ from autogen_core.models import AssistantMessage, ChatCompletionClient
 
 
 # 导入您的工具
-from agents.tools.AllTools import tools
+from backend.agents.tools.AllTools import tools
 
 
 

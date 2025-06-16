@@ -1,13 +1,12 @@
 from autogen_agentchat.ui import Console
-from autogen_agentchat.base import Team
 from autogen_agentchat.agents import AssistantAgent
 from backend.agents.clients.OpenaiForAssistant import OpenaiForAssistant
 import asyncio
 import os
 from dotenv import load_dotenv
-from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
+from autogen_agentchat.conditions import MaxMessageTermination
 from autogen_agentchat.teams import RoundRobinGroupChat
-from agents.tools.AllTools import tools
+from backend.agents.tools.AllTools import tools
 
 
 
